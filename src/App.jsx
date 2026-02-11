@@ -13,188 +13,230 @@ const formatMoney = (n) => {
   return `$${n.toLocaleString()}`;
 };
 
-// ==================== 8-BIT ART ENGINE ====================
-// This component renders crisp SVG pixel art without needing external files.
-
-const PixelArt = ({ type, color = "currentColor", size = 50, className = "" }) => {
-  // Common styles for 8-bit look
+// ==================== 8-BIT ART ENGINE (UPDATED v7.0) ====================
+const PixelArt = ({ type, size = 50, className = "" }) => {
   const style = { width: size, height: size, imageRendering: 'pixelated', shapeRendering: 'crispEdges' };
   
   // PALETTE
   const c = {
     skin: "#FFDCB1",
-    darkSkin: "#E0B080",
-    outline: "#2D1B00",
-    shirt: "#3B82F6",
-    pants: "#1E3A8A",
+    wood: "#8B4513",
+    darkWood: "#5D4037",
     gold: "#FFD700",
     steel: "#94A3B8",
-    wood: "#8B4513",
-    leaves: "#22C55E",
+    black: "#1F2937",
+    white: "#F8FAFC",
     red: "#EF4444",
-    black: "#111",
-    white: "#FFF"
+    blue: "#3B82F6",
+    green: "#22C55E",
+    glass: "#60A5FA",
+    screen: "#111",
+    leaves: "#4ADE80"
   };
 
-  // --- ART ASSETS (16x16 or 24x24 Grids) ---
+  // --- DYNAMIC COLOR LOGIC ---
+  const nameLower = type.toLowerCase();
+  let dynamicColor = c.blue; // Default
+  if (nameLower.includes('red')) dynamicColor = "#EF4444";
+  if (nameLower.includes('blue')) dynamicColor = "#3B82F6";
+  if (nameLower.includes('green')) dynamicColor = "#22C55E";
+  if (nameLower.includes('pink')) dynamicColor = "#EC4899";
+  if (nameLower.includes('black')) dynamicColor = "#111";
+  if (nameLower.includes('white')) dynamicColor = "#F1F5F9";
+  if (nameLower.includes('gray') || nameLower.includes('grey')) dynamicColor = "#64748B";
+  if (nameLower.includes('brown')) dynamicColor = "#78350F";
+  if (nameLower.includes('blonde')) dynamicColor = "#FACC15";
+
+  // --- ASSETS LIBRARY ---
   const assets = {
-    // === CHARACTER ===
-    base_character: (
-      <svg viewBox="0 0 24 24" style={style} className={className}>
-        {/* Legs */}
-        <rect x="8" y="16" width="3" height="8" fill={c.pants} />
-        <rect x="13" y="16" width="3" height="8" fill={c.pants} />
-        {/* Torso */}
-        <rect x="7" y="10" width="10" height="7" fill={color === "currentColor" ? c.shirt : color} />
-        {/* Head */}
-        <rect x="8" y="3" width="8" height="7" fill={c.skin} />
-        {/* Eyes */}
-        <rect x="10" y="5" width="1" height="1" fill={c.black} />
-        <rect x="13" y="5" width="1" height="1" fill={c.black} />
+    // === CUSTOMIZATION ===
+    hair: (
+      <svg viewBox="0 0 24 24" style={style}>
+        {/* Hair Shape */}
+        <path d="M4 8h16v6h-2v2h-2v-2H8v2H6v-2H4z" fill={dynamicColor} />
+        <rect x="4" y="6" width="16" height="2" fill={dynamicColor} />
+        <rect x="6" y="4" width="12" height="2" fill={dynamicColor} />
+      </svg>
+    ),
+    eyes: (
+      <svg viewBox="0 0 24 24" style={style}>
+        <rect x="2" y="6" width="20" height="12" fill={c.skin} rx="4" />
+        {nameLower.includes('cool') ? (
+          // Sunglasses
+          <g>
+             <rect x="4" y="10" width="16" height="4" fill="black" />
+             <rect x="5" y="11" width="5" height="1" fill="#444" />
+             <rect x="14" y="11" width="5" height="1" fill="#444" />
+          </g>
+        ) : (
+          // Normal Eyes
+          <g>
+            <rect x="6" y="10" width="4" height="4" fill="white" />
+            <rect x="7" y="11" width="2" height="2" fill="black" />
+            <rect x="14" y="10" width="4" height="4" fill="white" />
+            <rect x="15" y="11" width="2" height="2" fill="black" />
+          </g>
+        )}
+      </svg>
+    ),
+    shirt: (
+      <svg viewBox="0 0 24 24" style={style}>
+        <rect x="4" y="6" width="16" height="14" fill={dynamicColor} rx="2" />
+        <path d="M8 6 L12 10 L16 6" fill="none" stroke="rgba(0,0,0,0.2)" strokeWidth="1" />
+        <rect x="9" y="8" width="6" height="8" fill="rgba(255,255,255,0.1)" />
+      </svg>
+    ),
+    pants: (
+      <svg viewBox="0 0 24 24" style={style}>
+        <rect x="6" y="4" width="12" height="4" fill={dynamicColor} />
+        <rect x="6" y="8" width="5" height="12" fill={dynamicColor} />
+        <rect x="13" y="8" width="5" height="12" fill={dynamicColor} />
+        <rect x="11" y="8" width="2" height="4" fill={dynamicColor} /> {/* Crotch */}
+        <rect x="6" y="20" width="5" height="2" fill="#111" /> {/* Shoes */}
+        <rect x="13" y="20" width="5" height="2" fill="#111" />
+      </svg>
+    ),
+
+    // === FURNITURE ===
+    bed: (
+      <svg viewBox="0 0 24 24" style={style}>
+        <rect x="2" y="10" width="20" height="10" fill={c.wood} rx="2"/> {/* Frame */}
+        <rect x="2" y="8" width="2" height="4" fill={c.wood} /> {/* Headboard post */}
+        <rect x="20" y="8" width="2" height="4" fill={c.wood} />
+        <rect x="4" y="12" width="16" height="6" fill="#60A5FA" /> {/* Blanket */}
+        <rect x="4" y="12" width="16" height="2" fill="white" /> {/* Sheet */}
+        <rect x="5" y="9" width="6" height="3" fill="white" rx="1" /> {/* Pillow */}
+      </svg>
+    ),
+    couch: (
+      <svg viewBox="0 0 24 24" style={style}>
+        <rect x="2" y="10" width="20" height="10" fill={c.darkWood} rx="2" /> {/* Base */}
+        <rect x="2" y="12" width="4" height="4" fill={c.red} /> {/* Arm */}
+        <rect x="18" y="12" width="4" height="4" fill={c.red} /> {/* Arm */}
+        <rect x="6" y="8" width="12" height="12" fill="#EF4444" /> {/* Seat */}
+        <rect x="6" y="6" width="12" height="4" fill="#B91C1C" /> {/* Back */}
+      </svg>
+    ),
+    chair: (
+      <svg viewBox="0 0 24 24" style={style}>
+        <rect x="10" y="12" width="4" height="10" fill="black" /> {/* Stand */}
+        <rect x="6" y="20" width="12" height="2" fill="black" /> {/* Base legs */}
+        <rect x="6" y="10" width="12" height="2" fill="#22C55E" /> {/* Seat */}
+        <rect x="7" y="4" width="10" height="8" fill="#166534" /> {/* Back */}
+        <rect x="8" y="6" width="8" height="4" fill="#22C55E" /> {/* Cushion */}
+      </svg>
+    ),
+    tv: (
+      <svg viewBox="0 0 24 24" style={style}>
+         <rect x="2" y="4" width="20" height="14" fill="#111" rx="2" /> {/* Frame */}
+         <rect x="4" y="6" width="16" height="10" fill="#333" /> {/* Screen Off */}
+         <rect x="8" y="18" width="8" height="4" fill="#111" /> {/* Stand */}
+         <rect x="6" y="21" width="12" height="1" fill="#444" />
+      </svg>
+    ),
+    pc: (
+      <svg viewBox="0 0 24 24" style={style}>
+         {/* Monitor */}
+         <rect x="2" y="4" width="14" height="10" fill="#111" />
+         <rect x="3" y="5" width="12" height="8" fill="#60A5FA" />
+         <rect x="6" y="14" width="6" height="4" fill="#111" /> {/* Stand */}
+         {/* Tower */}
+         <rect x="17" y="6" width="5" height="12" fill="#111" />
+         <rect x="18" y="8" width="1" height="8" fill="#EF4444" /> {/* LED Strip */}
+      </svg>
+    ),
+    bookshelf: (
+      <svg viewBox="0 0 24 24" style={style}>
+        <rect x="4" y="2" width="16" height="20" fill={c.wood} />
+        <rect x="6" y="6" width="12" height="2" fill={c.darkWood} /> {/* Shelf 1 */}
+        <rect x="6" y="12" width="12" height="2" fill={c.darkWood} /> {/* Shelf 2 */}
+        <rect x="6" y="18" width="12" height="2" fill={c.darkWood} /> {/* Shelf 3 */}
+        {/* Books */}
+        <rect x="7" y="8" width="2" height="4" fill={c.red} />
+        <rect x="10" y="8" width="2" height="4" fill={c.blue} />
+        <rect x="13" y="14" width="2" height="4" fill={c.green} />
+      </svg>
+    ),
+    piano: (
+      <svg viewBox="0 0 24 24" style={style}>
+        <path d="M4 6h16v12H4z" fill="black" /> {/* Body */}
+        <rect x="4" y="14" width="16" height="4" fill="white" /> {/* Keys base */}
+        <rect x="5" y="14" width="1" height="2" fill="black" />
+        <rect x="7" y="14" width="1" height="2" fill="black" />
+        <rect x="10" y="14" width="1" height="2" fill="black" />
+        <rect x="12" y="14" width="1" height="2" fill="black" />
+        <rect x="14" y="14" width="1" height="2" fill="black" />
+        <rect x="6" y="18" width="2" height="4" fill="black" /> {/* Leg */}
+        <rect x="16" y="18" width="2" height="4" fill="black" /> {/* Leg */}
+      </svg>
+    ),
+    fishtank: (
+      <svg viewBox="0 0 24 24" style={style}>
+        <rect x="4" y="6" width="16" height="10" fill="#60A5FA" opacity="0.5" /> {/* Water */}
+        <rect x="4" y="6" width="16" height="10" fill="none" stroke="#3B82F6" strokeWidth="2" /> {/* Frame */}
+        <rect x="6" y="14" width="12" height="2" fill="#EAB308" /> {/* Sand */}
+        <rect x="8" y="10" width="2" height="1" fill="#F97316" /> {/* Fish 1 */}
+        <rect x="14" y="8" width="2" height="1" fill="#F97316" /> {/* Fish 2 */}
       </svg>
     ),
     
-    // === OUTFITS ===
+    // === OUTFITS/MISC ===
     crown: (
       <svg viewBox="0 0 24 24" style={style}>
-        <path d="M4 16h16v4H4z" fill={c.gold} /> {/* Band */}
-        <path d="M4 16l4-8 4 4 4-4 4 8H4z" fill={c.gold} /> {/* Spikes */}
-        <rect x="8" y="6" width="2" height="2" fill={c.red} /> {/* Jewels */}
+        <path d="M4 16h16v4H4z" fill={c.gold} />
+        <path d="M4 16l4-8 4 4 4-4 4 8H4z" fill={c.gold} />
+        <rect x="8" y="6" width="2" height="2" fill={c.red} />
         <rect x="14" y="6" width="2" height="2" fill={c.red} />
       </svg>
     ),
-    wizard_hat: (
-      <svg viewBox="0 0 24 24" style={style}>
-        <path d="M2 18h20v2H2z" fill="#4B0082" /> {/* Brim */}
-        <path d="M6 18L12 2l6 16H6z" fill="#5D3FD3" /> {/* Cone */}
-        <path d="M8 12l2-1 2 4z" fill={c.gold} /> {/* Star */}
-      </svg>
-    ),
-    tophat: (
-      <svg viewBox="0 0 24 24" style={style}>
-        <rect x="4" y="16" width="16" height="2" fill={c.black} />
-        <rect x="6" y="6" width="12" height="10" fill={c.black} />
-        <rect x="6" y="14" width="12" height="2" fill={c.red} />
-      </svg>
-    ),
-
-    // === WEAPONS ===
     sword: (
       <svg viewBox="0 0 24 24" style={style} transform="rotate(45)">
-        <rect x="10" y="14" width="4" height="8" fill={c.wood} /> {/* Hilt */}
-        <rect x="8" y="12" width="8" height="2" fill={c.gold} /> {/* Guard */}
-        <rect x="10" y="2" width="4" height="10" fill={c.steel} /> {/* Blade */}
-        <rect x="11" y="2" width="2" height="10" fill="#CBD5E1" /> {/* Shine */}
+        <rect x="10" y="14" width="4" height="8" fill={c.wood} />
+        <rect x="8" y="12" width="8" height="2" fill={c.gold} />
+        <rect x="10" y="2" width="4" height="10" fill={c.steel} />
       </svg>
     ),
     wand: (
       <svg viewBox="0 0 24 24" style={style} transform="rotate(15)">
         <rect x="10" y="8" width="4" height="14" fill={c.wood} />
-        <path d="M12 2l2 4-2 2-2-2z" fill="#4ADE80" /> {/* Gem */}
-        <circle cx="12" cy="4" r="3" fill="rgba(74, 222, 128, 0.3)" /> {/* Glow */}
+        <path d="M12 2l2 4-2 2-2-2z" fill="#4ADE80" />
       </svg>
     ),
     guitar: (
       <svg viewBox="0 0 24 24" style={style} transform="rotate(-15)">
-        <rect x="10" y="2" width="4" height="10" fill={c.wood} /> {/* Neck */}
-        <path d="M8 12h8v8a4 4 0 01-8 0v-8z" fill={c.red} /> {/* Body */}
+        <rect x="10" y="2" width="4" height="10" fill={c.wood} />
+        <path d="M8 12h8v8a4 4 0 01-8 0v-8z" fill={c.red} />
         <circle cx="12" cy="16" r="2" fill={c.black} />
       </svg>
     ),
-
-    // === PETS ===
-    dog: (
-      <svg viewBox="0 0 24 24" style={style}>
-        <rect x="8" y="12" width="10" height="6" fill="#D97706" /> {/* Body */}
-        <rect x="8" y="18" width="2" height="4" fill="#D97706" /> {/* Leg */}
-        <rect x="16" y="18" width="2" height="4" fill="#D97706" /> {/* Leg */}
-        <rect x="4" y="8" width="6" height="6" fill="#D97706" /> {/* Head */}
-        <rect x="4" y="10" width="2" height="2" fill={c.black} /> {/* Nose */}
-        <rect x="6" y="6" width="2" height="4" fill="#B45309" /> {/* Ear */}
-        <rect x="18" y="10" width="4" height="2" fill="#D97706" /> {/* Tail */}
-      </svg>
-    ),
-    cat: (
-      <svg viewBox="0 0 24 24" style={style}>
-        <rect x="8" y="12" width="8" height="6" fill="#333" />
-        <rect x="8" y="18" width="2" height="3" fill="#333" />
-        <rect x="14" y="18" width="2" height="3" fill="#333" />
-        <rect x="6" y="8" width="6" height="5" fill="#333" />
-        <path d="M6 8l-2-2h2z" fill="#333" /> {/* Ear */}
-        <path d="M12 8l2-2h-2z" fill="#333" /> {/* Ear */}
-        <rect x="16" y="10" width="4" height="2" fill="#333" /> {/* Tail */}
-      </svg>
-    ),
-    dragon: (
-      <svg viewBox="0 0 24 24" style={style}>
-        <path d="M6 14h10v6H6z" fill="#DC2626" /> {/* Body */}
-        <path d="M14 6h6v8h-6z" fill="#DC2626" /> {/* Head */}
-        <rect x="4" y="10" width="6" height="6" fill="#991B1B" /> {/* Wing */}
-        <rect x="18" y="8" width="2" height="2" fill={c.gold} /> {/* Eye */}
-        <path d="M20 10l4 2-4 2z" fill="#F59E0B" /> {/* Fire */}
-      </svg>
-    ),
-
-    // === FURNITURE ===
-    plant: (
-      <svg viewBox="0 0 24 24" style={style}>
-        <rect x="8" y="16" width="8" height="6" fill="#B45309" /> {/* Pot */}
-        <rect x="11" y="10" width="2" height="6" fill="#166534" /> {/* Stem */}
-        <circle cx="12" cy="8" r="4" fill={c.leaves} />
-        <circle cx="8" cy="10" r="3" fill={c.leaves} />
-        <circle cx="16" cy="10" r="3" fill={c.leaves} />
-      </svg>
-    ),
-    lamp: (
-      <svg viewBox="0 0 24 24" style={style}>
-        <rect x="11" y="12" width="2" height="10" fill={c.wood} />
-        <path d="M6 12h12L15 4H9z" fill="#FEF08A" /> {/* Shade */}
-        <rect x="8" y="22" width="8" height="2" fill={c.wood} />
-      </svg>
-    ),
-    painting: (
-      <svg viewBox="0 0 24 24" style={style}>
-        <rect x="4" y="4" width="16" height="16" fill={c.wood} />
-        <rect x="6" y="6" width="12" height="12" fill="#87CEEB" />
-        <circle cx="14" cy="10" r="2" fill="#FDE047" /> {/* Sun */}
-        <path d="M6 18l4-6 4 6z" fill="#22C55E" /> {/* Mountain */}
-      </svg>
-    ),
-    rug: (
-      <svg viewBox="0 0 24 24" style={style} transform="scale(1, 0.5)">
-        <rect x="2" y="4" width="20" height="16" rx="2" fill="#BE123C" />
-        <rect x="4" y="6" width="16" height="12" rx="2" fill="#F43F5E" />
-      </svg>
-    ),
     generic: (
-      <svg viewBox="0 0 24 24" style={style}>
-         <rect x="4" y="4" width="16" height="16" fill="#64748B" rx="4" />
-         <text x="12" y="16" textAnchor="middle" fill="white" fontSize="12">?</text>
-      </svg>
+       <svg viewBox="0 0 24 24" style={style}>
+         <rect x="4" y="4" width="16" height="16" fill="#475569" rx="4" />
+         <text x="12" y="16" textAnchor="middle" fill="white" fontSize="12" fontFamily="monospace">?</text>
+       </svg>
     )
   };
 
-  // LOGIC TO PICK ASSET BASED ON NAME
-  const nameLower = type.toLowerCase();
+  // --- SELECTION LOGIC ---
+  if (nameLower.includes('hair')) return assets.hair;
+  if (nameLower.includes('eyes')) return assets.eyes;
+  if (nameLower.includes('shirt')) return assets.shirt;
+  if (nameLower.includes('pants')) return assets.pants;
   
-  if (nameLower.includes('shirt')) return React.cloneElement(assets.base_character, { className }); // Color handled in SVG
-  
-  // Specific Matches
+  if (nameLower.includes('bed')) return assets.bed;
+  if (nameLower.includes('couch') || nameLower.includes('sofa')) return assets.couch;
+  if (nameLower.includes('chair')) return assets.chair;
+  if (nameLower.includes('tv') || nameLower.includes('screen')) return assets.tv;
+  if (nameLower.includes('pc') || nameLower.includes('computer')) return assets.pc;
+  if (nameLower.includes('shelf') || nameLower.includes('book')) return assets.bookshelf;
+  if (nameLower.includes('piano')) return assets.piano;
+  if (nameLower.includes('tank') || nameLower.includes('fish')) return assets.fishtank;
+
   if (nameLower.includes('crown')) return assets.crown;
-  if (nameLower.includes('wizard')) return assets.wizard_hat;
-  if (nameLower.includes('hat')) return assets.tophat;
   if (nameLower.includes('sword')) return assets.sword;
   if (nameLower.includes('wand')) return assets.wand;
   if (nameLower.includes('guitar')) return assets.guitar;
-  if (nameLower.includes('dog')) return assets.dog;
-  if (nameLower.includes('cat')) return assets.cat;
-  if (nameLower.includes('dragon')) return assets.dragon;
-  if (nameLower.includes('plant')) return assets.plant;
-  if (nameLower.includes('lamp')) return assets.lamp;
-  if (nameLower.includes('painting')) return assets.painting;
-  if (nameLower.includes('rug')) return assets.rug;
 
-  // Fallback
   return assets.generic;
 };
 
@@ -203,12 +245,13 @@ const PixelArt = ({ type, color = "currentColor", size = 50, className = "" }) =
 const RoamingPet = ({ type }) => {
   const [pos, setPos] = useState({ x: 50, y: 80 });
   const [direction, setDirection] = useState(1);
+  const emojis = { dog: '🐕', cat: '🐈', dragon: '🐉', phoenix: '🔥', robot: '🤖', unicorn: '🦄' };
 
   useEffect(() => {
     const moveInterval = setInterval(() => {
       setPos(prev => {
         const newX = Math.max(10, Math.min(90, prev.x + (Math.random() - 0.5) * 40));
-        setDirection(newX > prev.x ? -1 : 1); // Flip based on direction
+        setDirection(newX > prev.x ? -1 : 1); 
         return { x: newX, y: 80 + (Math.random() * 5) };
       });
     }, 2500);
@@ -216,38 +259,39 @@ const RoamingPet = ({ type }) => {
   }, []);
 
   return (
-    <div style={{ 
-      position: 'absolute', left: `${pos.x}%`, top: `${pos.y}%`, 
-      transition: 'all 2.5s ease-in-out', zIndex: 20, 
-      transform: `scaleX(${direction})` // Flip SVG
-    }}>
-      <PixelArt type={type} size={64} />
+    <div style={{ position: 'absolute', left: `${pos.x}%`, top: `${pos.y}%`, transition: 'all 2.5s ease-in-out', zIndex: 20, transform: `scaleX(${direction})` }}>
+      <div style={{ fontSize: '3rem', filter: 'drop-shadow(0 4px 2px rgba(0,0,0,0.3))' }}>{emojis[type] || '🐾'}</div>
     </div>
   );
 };
 
-const PlayerAvatar = ({ equipped, size = 100 }) => {
-  // Determine shirt color based on equipped item name
-  let shirtColor = "#3B82F6"; // Default Blue
+const PlayerAvatar = ({ equipped, size = 150 }) => {
+  // Determine shirt color
+  let shirtColor = "#3B82F6"; 
   if (equipped.outfits?.includes('red')) shirtColor = "#EF4444";
   if (equipped.outfits?.includes('green')) shirtColor = "#22C55E";
-  if (equipped.outfits?.includes('black')) shirtColor = "#111827";
-  if (equipped.outfits?.includes('gold')) shirtColor = "#EAB308";
+  if (equipped.outfits?.includes('black')) shirtColor = "#1F2937";
+  if (equipped.outfits?.includes('white')) shirtColor = "#F8FAFC";
+  if (equipped.outfits?.includes('gray')) shirtColor = "#64748B";
 
   return (
     <div style={{ width: size, height: size, position: 'relative' }}>
-       {/* Base Body with dynamic shirt color */}
-       <PixelArt type="base_character" color={shirtColor} size={size} />
+       {/* Body Base */}
+       <div className="absolute bottom-0 left-[25%] w-[50%] h-[35%] bg-slate-800" /> {/* Legs */}
+       <div className="absolute bottom-[35%] left-[20%] w-[60%] h-[35%] rounded-sm" style={{ backgroundColor: shirtColor }} /> {/* Torso */}
+       <div className="absolute bottom-[70%] left-[25%] w-[50%] h-[30%] bg-[#FFDCB1] rounded-lg" /> {/* Head */}
+
+       {/* Facial Features */}
+       <div className="absolute bottom-[80%] left-[35%] w-[10%] h-[5%] bg-black" /> {/* Eye L */}
+       <div className="absolute bottom-[80%] left-[55%] w-[10%] h-[5%] bg-black" /> {/* Eye R */}
+
+       {/* Hats/Accessories */}
+       {equipped.outfits?.includes('crown') && <div className="absolute -top-6 left-2"><PixelArt type="crown" size={size/1.5} /></div>}
        
-       {/* Hats Layer */}
-       {equipped.outfits?.includes('crown') && <div className="absolute -top-6 left-0"><PixelArt type="crown" size={size} /></div>}
-       {equipped.outfits?.includes('wizard') && <div className="absolute -top-8 left-0"><PixelArt type="wizard_hat" size={size} /></div>}
-       {equipped.outfits?.includes('tophat') && <div className="absolute -top-8 left-0"><PixelArt type="tophat" size={size} /></div>}
-       
-       {/* Weapons Layer */}
+       {/* Weapons */}
        {equipped.weapons && (
-         <div className="absolute top-1/2 -right-4" style={{ transform: 'translateY(-50%)' }}>
-           <PixelArt type={equipped.weapons} size={size * 0.8} />
+         <div className="absolute top-1/2 -right-8" style={{ transform: 'translateY(-50%)' }}>
+           <PixelArt type={equipped.weapons} size={size * 0.7} />
          </div>
        )}
     </div>
@@ -353,7 +397,7 @@ const House = ({ playerData, onClose }) => {
         ))}
 
         <div className="absolute bottom-[15%] left-1/2 -translate-x-1/2 z-10 hover:scale-110 transition">
-          <PlayerAvatar equipped={playerData.equippedItems} size={160} />
+          <PlayerAvatar equipped={playerData.equippedItems} size={180} />
         </div>
 
         {playerData.ownedItems?.pets?.map((pet, i) => <RoamingPet key={i} type={pet} />)}
@@ -376,6 +420,7 @@ const Shop = ({ playerData, onBuy, onClose }) => {
           return (
             <div key={item.id} className="bg-slate-800 p-4 rounded border border-slate-700 flex flex-col items-center hover:bg-slate-750 transition group">
               <div className="mb-3 p-4 bg-slate-900 rounded-lg border border-slate-600 group-hover:border-yellow-400 transition">
+                {/* Dynamically Render the Correct Pixel Art */}
                 <PixelArt type={item.id} size={80} />
               </div>
               <div className="text-white font-bold text-center mb-1">{item.name}</div>
@@ -397,7 +442,7 @@ function App() {
   const [screen, setScreen] = useState('menu');
   const [playerData, setPlayerData] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem('millionaireV9')) || {
+      return JSON.parse(localStorage.getItem('millionaireV10')) || {
         coins: 50000, 
         ownedItems: { outfits: [], weapons: [], pets: [], furniture: [] },
         equippedItems: { outfits: null, weapons: null },
@@ -406,7 +451,7 @@ function App() {
   });
   const [gameState, setGameState] = useState({ level: 0, category: null, question: null, used: [] });
 
-  useEffect(() => { localStorage.setItem('millionaireV9', JSON.stringify(playerData)); }, [playerData]);
+  useEffect(() => { localStorage.setItem('millionaireV10', JSON.stringify(playerData)); }, [playerData]);
 
   const startGame = (cat) => { setScreen('play'); setGameState({ level: 0, category: cat, question: getQuestion(0, cat, []), used: [] }); };
   const getQuestion = (lvl, cat, used) => {
