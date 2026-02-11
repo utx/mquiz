@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
 // ==================== IMPORTS ====================
-// Make sure these files exist in your src/data folder!
 import { QUESTIONS } from './data/questions';
 import { SHOP_ITEMS } from './data/items';
 import { PRIZE_LADDER, CATEGORIES } from './data/constants';
@@ -90,4 +89,118 @@ function App() {
 
   const getQuestion = (level, category, used) => {
     const diff = level < 5 ? 'easy' : level < 10 ? 'medium' : 'hard';
-    const bank = QUESTIONS[category]?.
+    // This line was broken in your previous file
+    const bank = QUESTIONS[category]?.[diff] || QUESTIONS.trivia[diff];
+    
+    const available = bank.filter(q => !used.includes(q.q));
+    if (!available.length) return bank[0]; // Fallback
+    return available[Math.floor(Math.random() * available.length)];
+  };
+
+  const handleAnswer = (index) => {
+    const isCorrect = index === gameState.question.a;
+    if (isCorrect) {
+      if (gameState.level >= 14) {
+        setPlayerData(p => ({ ...p, coins: p.coins + 1000000 }));
+        setScreen('won');
+      } else {
+        const nextLevel = gameState.level + 1;
+        setGameState(prev => ({
+          ...prev,
+          level: nextLevel,
+          question: getQuestion(nextLevel, prev.category, [...prev.usedQuestions, prev.question.q]),
+          usedQuestions: [...prev.usedQuestions, prev.question.q]
+        }));
+      }
+    } else {
+      setScreen('lost');
+    }
+  };
+
+  const buyItem = (cat, item) => {
+    if (playerData.coins >= item.price) {
+      setPlayerData(p => ({
+        ...p,
+        coins: p.coins - item.price,
+        ownedItems: { ...p.ownedItems, [cat]: [...(p.ownedItems[cat] || []), item.id] }
+      }));
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-900 text-white font-sans">
+      {screen === 'menu' && (
+        <div className="flex flex-col items-center justify-center h-screen space-y-4">
+          <h1 className="text-4xl font-bold text-yellow-400">MILLIONAIRE ARENA</h1>
+          <div className="text-green-400 font-mono">Coins: {formatMoney(playerData.coins)}</div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            {CATEGORIES.map(cat => (
+              <button 
+                key={cat.id} 
+                onClick={() => startGame(cat.id)}
+                className={`p-4 rounded-xl bg-gradient-to-r ${cat.color} font-bold hover:scale-105 transition`}
+              >
+                {cat.icon} {cat.name}
+              </button>
+            ))}
+          </div>
+          
+          <button onClick={() => setScreen('shop')} className="px-8 py-3 bg-blue-600 rounded-full font-bold hover:bg-blue-500 transition">
+            🛒 ENTER SHOP
+          </button>
+        </div>
+      )}
+
+      {screen === 'play' && gameState.question && (
+        <div className="flex flex-col items-center p-4 max-w-2xl mx-auto h-screen">
+          <div className="w-full flex justify-between mb-8">
+            <span className="text-yellow-400 font-bold">Level: {gameState.level + 1}/15</span>
+            <span className="text-green-400 font-bold">Prize: {formatMoney(PRIZE_LADDER[gameState.level])}</span>
+          </div>
+          
+          <div className="bg-slate-800 p-8 rounded-2xl border-2 border-blue-500 w-full mb-8 text-center text-xl shadow-lg">
+            {gameState.question.q}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+            {gameState.question.o.map((option, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleAnswer(idx)}
+                className="p-4 bg-slate-700 border border-slate-600 rounded-lg hover:bg-blue-900 hover:border-blue-400 transition text-left flex"
+              >
+                <span className="text-yellow-500 mr-3 font-bold">{['A','B','C','D'][idx]}:</span>
+                {option}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {screen === 'shop' && (
+        <Shop 
+          playerData={playerData} 
+          onBuy={buyItem} 
+          onClose={() => setScreen('menu')} 
+        />
+      )}
+
+      {(screen === 'lost' || screen === 'won') && (
+        <div className="flex flex-col items-center justify-center h-screen space-y-6">
+          <h2 className={`text-6xl font-black ${screen === 'won' ? 'text-yellow-400' : 'text-red-500'}`}>
+            {screen === 'won' ? 'YOU WON!' : 'GAME OVER'}
+          </h2>
+          <button 
+            onClick={() => setScreen('menu')}
+            className="px-12 py-4 bg-white text-black rounded-full font-bold text-xl hover:bg-gray-200 transition"
+          >
+            RETURN TO MENU
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default App;
