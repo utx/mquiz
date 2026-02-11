@@ -13,6 +13,75 @@ const formatMoney = (n) => {
   return `$${n.toLocaleString()}`;
 };
 
+// ==================== COMPONENT: PIXEL ART ICONS ====================
+// This component draws unique pixel art based on the specific Item ID
+const PixelIcon = ({ name, type, size = 50 }) => {
+  const s = size;
+  const nameLower = name.toLowerCase();
+
+  // --- OUTFITS ---
+  if (type === 'outfits') {
+    if (nameLower.includes('shirt') || nameLower.includes('hoodie')) {
+      const color = nameLower.includes('red') ? '#ef4444' : 
+                    nameLower.includes('blue') ? '#3b82f6' : 
+                    nameLower.includes('green') ? '#22c55e' : 
+                    nameLower.includes('black') ? '#1f2937' : 
+                    nameLower.includes('gold') ? '#eab308' : '#cbd5e1';
+      return (
+        <div style={{ width: s, height: s, position: 'relative' }}>
+          <div style={{ position: 'absolute', top: '10%', left: '10%', width: '80%', height: '80%', background: color, borderRadius: '10%' }} />
+          <div style={{ position: 'absolute', top: '10%', left: '30%', width: '40%', height: '20%', background: '#1e293b', borderRadius: '0 0 50% 50%' }} />
+          <div style={{ position: 'absolute', top: '40%', left: '40%', fontSize: s/2.5 }}>👕</div>
+        </div>
+      );
+    }
+    if (nameLower.includes('hat') || nameLower.includes('crown')) {
+      return (
+        <div style={{ width: s, height: s, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: s/1.5 }}>
+           {nameLower.includes('crown') ? '👑' : nameLower.includes('wizard') ? '🧙‍♂️' : '🧢'}
+        </div>
+      );
+    }
+    return <div style={{ fontSize: s/1.5 }}>👔</div>;
+  }
+
+  // --- WEAPONS ---
+  if (type === 'weapons') {
+    let icon = '⚔️';
+    if (nameLower.includes('wand')) icon = '🪄';
+    if (nameLower.includes('bow')) icon = '🏹';
+    if (nameLower.includes('guitar')) icon = '🎸';
+    if (nameLower.includes('lightsaber')) icon = '🗡️';
+    return <div style={{ fontSize: s/1.5 }}>{icon}</div>;
+  }
+
+  // --- PETS ---
+  if (type === 'pets') {
+    let icon = '🐾';
+    if (nameLower.includes('dog')) icon = '🐕';
+    if (nameLower.includes('cat')) icon = '🐈';
+    if (nameLower.includes('dragon')) icon = '🐉';
+    if (nameLower.includes('phoenix')) icon = '🔥';
+    if (nameLower.includes('robot')) icon = '🤖';
+    if (nameLower.includes('unicorn')) icon = '🦄';
+    return <div style={{ fontSize: s/1.5 }}>{icon}</div>;
+  }
+
+  // --- FURNITURE ---
+  if (type === 'furniture') {
+    let icon = '📦';
+    if (nameLower.includes('lamp')) icon = '🛋️';
+    if (nameLower.includes('bed')) icon = '🛏️';
+    if (nameLower.includes('plant')) icon = '🪴';
+    if (nameLower.includes('rug')) icon = '🧶';
+    if (nameLower.includes('painting')) icon = '🖼️';
+    if (nameLower.includes('throne')) icon = '💺';
+    return <div style={{ fontSize: s/1.5 }}>{icon}</div>;
+  }
+
+  return <div style={{ fontSize: s/2 }}>❓</div>;
+};
+
 // ==================== VISUAL COMPONENTS ====================
 
 const RoamingPet = ({ type }) => {
@@ -20,7 +89,7 @@ const RoamingPet = ({ type }) => {
   const [msg, setMsg] = useState('');
   const [direction, setDirection] = useState(1);
 
-  const emojis = { dog: '🐕', cat: '🐈', dragon: '🐉', phoenix: '🔥', robot: '🤖' };
+  const emojis = { dog: '🐕', cat: '🐈', dragon: '🐉', phoenix: '🔥', robot: '🤖', unicorn: '🦄' };
   const quotes = ["Winning!", "Feed me!", "So rich!", "Let's play!", "Shiny!", "Woof?"];
 
   useEffect(() => {
@@ -61,13 +130,19 @@ const RoamingPet = ({ type }) => {
 const PixelAvatar = ({ equipped, size = 100 }) => {
   return (
     <div style={{ width: size, height: size, position: 'relative' }}>
+       {/* BASE BODY */}
        <div className="absolute bottom-0 left-1/4 w-1/2 h-1/3 bg-slate-700" />
        <div className="absolute bottom-1/3 left-1/5 w-3/5 h-1/3 bg-blue-500 rounded-sm" />
        <div className="absolute bottom-2/3 left-1/4 w-1/2 h-1/3 bg-orange-200 rounded-full" />
-       {equipped.outfits === 'crown' && <div className="absolute -top-2 left-1/4 text-2xl">👑</div>}
-       {equipped.outfits === 'tophat' && <div className="absolute -top-4 left-1/4 text-2xl">🎩</div>}
-       {equipped.weapons === 'sword' && <div className="absolute top-1/2 -right-4 text-3xl">⚔️</div>}
-       {equipped.weapons === 'wand' && <div className="absolute top-1/2 -right-4 text-3xl">🪄</div>}
+       
+       {/* EQUIPPED VISUALS */}
+       {equipped.outfits && equipped.outfits.includes('crown') && <div className="absolute -top-4 left-1/4 text-4xl">👑</div>}
+       {equipped.outfits && equipped.outfits.includes('wizard') && <div className="absolute -top-6 left-1/4 text-4xl">🧙‍♂️</div>}
+       {equipped.outfits && equipped.outfits.includes('tophat') && <div className="absolute -top-6 left-1/4 text-4xl">🎩</div>}
+       
+       {equipped.weapons && equipped.weapons.includes('sword') && <div className="absolute top-1/2 -right-6 text-4xl rotate-45">⚔️</div>}
+       {equipped.weapons && equipped.weapons.includes('wand') && <div className="absolute top-1/2 -right-6 text-4xl rotate-12">🪄</div>}
+       {equipped.weapons && equipped.weapons.includes('guitar') && <div className="absolute top-1/3 -right-6 text-4xl rotate-12">🎸</div>}
     </div>
   );
 };
@@ -79,32 +154,18 @@ const Casino = ({ playerData, updateCoins, onClose }) => {
   const [streak, setStreak] = useState(0);
   const [q, setQ] = useState(null);
   const [msg, setMsg] = useState("");
-  
-  // Track questions used IN THIS SESSION to prevent repeats
   const [sessionUsed, setSessionUsed] = useState([]);
 
-  // --- LOGIC: GET TRULY RANDOM QUESTION FROM ANYWHERE ---
   const getRandomGlobalQuestion = () => {
-    // 1. Get all categories (trivia, science, history...)
     const allCats = Object.keys(QUESTIONS);
-    // 2. Pick random category
     const randCat = allCats[Math.floor(Math.random() * allCats.length)];
-    // 3. Pick random difficulty (to ensure we don't just get hard ones)
     const diffs = ['easy', 'medium', 'hard'];
     const randDiff = diffs[Math.floor(Math.random() * diffs.length)];
-    
-    // 4. Get the bank
     const bank = QUESTIONS[randCat]?.[randDiff] || QUESTIONS.trivia.easy;
-    
-    // 5. Filter out ones we've just seen
     const available = bank.filter(item => !sessionUsed.includes(item.q));
-    
-    // 6. If we exhausted a specific small bank, just pick any to prevent crash
-    const finalQ = available.length > 0 
+    return available.length > 0 
       ? available[Math.floor(Math.random() * available.length)] 
       : bank[Math.floor(Math.random() * bank.length)];
-
-    return finalQ;
   };
 
   const startGauntlet = () => {
@@ -112,10 +173,10 @@ const Casino = ({ playerData, updateCoins, onClose }) => {
       setMsg("Invalid bet amount!");
       return;
     }
-    updateCoins(-bet); // Deduct money upfront
+    updateCoins(-bet);
     setStreak(0);
     setMsg("");
-    setSessionUsed([]); // Reset used list for new game
+    setSessionUsed([]);
     loadNextQuestion();
     setPhase('playing');
   };
@@ -128,22 +189,17 @@ const Casino = ({ playerData, updateCoins, onClose }) => {
 
   const handleAnswer = (idx) => {
     if (idx === q.a) {
-      // CORRECT
       const newStreak = streak + 1;
       setStreak(newStreak);
-      
       if (newStreak === 5) {
-        // WIN CONDITION MET
         const winnings = bet * 5;
         updateCoins(winnings); 
         setMsg(`JACKPOT! 5 IN A ROW! +${formatMoney(winnings)}`);
         setPhase('result');
       } else {
-        // KEEP GOING
         loadNextQuestion();
       }
     } else {
-      // WRONG - GAME OVER
       setMsg(`WRONG! You lost ${formatMoney(bet)}.`);
       setPhase('result');
     }
@@ -182,7 +238,6 @@ const Casino = ({ playerData, updateCoins, onClose }) => {
               <span className="text-yellow-400 font-bold">STREAK: {streak}/5</span>
               <span className="text-green-400 font-bold">POT: {formatMoney(bet * 5)}</span>
             </div>
-
             <div className="bg-white text-black p-4 rounded-xl font-bold text-lg mb-6 border-4 border-blue-500 min-h-[100px] flex items-center justify-center">
               {q.q}
             </div>
@@ -200,7 +255,7 @@ const Casino = ({ playerData, updateCoins, onClose }) => {
           <div className="space-y-6 animate-fade-in">
             <h3 className={`text-3xl font-black ${msg.includes('JACKPOT') ? 'text-green-400' : 'text-red-500'}`}>{msg}</h3>
             {msg.includes('WRONG') && (
-               <p className="text-white">The correct answer was: <span className="text-yellow-400 font-bold">{q.o[q.a]}</span></p>
+               <p className="text-white">Correct: <span className="text-yellow-400 font-bold">{q.o[q.a]}</span></p>
             )}
             <button onClick={() => setPhase('betting')} className="bg-yellow-400 text-black px-8 py-3 rounded-full font-bold text-xl hover:scale-105 transition">
               PLAY AGAIN
@@ -221,16 +276,11 @@ const House = ({ playerData, onClose }) => {
         <div className="absolute top-0 w-full h-[70%] bg-[#FFDAB9] border-b-4 border-slate-400"></div>
         <div className="absolute bottom-0 w-full h-[30%] bg-[#8B4513]"></div>
         
-        <button onClick={onClose} className="absolute top-4 right-4 bg-red-500 text-white p-2 rounded-full z-50 font-bold border-2 border-white">
-          EXIT HOUSE
-        </button>
+        <button onClick={onClose} className="absolute top-4 right-4 bg-red-500 text-white p-2 rounded-full z-50 font-bold border-2 border-white">EXIT HOUSE</button>
 
         {playerData.ownedItems?.furniture?.map((item, i) => (
           <div key={i} className="absolute bottom-[25%] text-6xl drop-shadow-lg" style={{ left: `${10 + (i * 15)}%` }}>
-            {item === 'lamp' && '🛋️'}
-            {item === 'painting' && '🖼️'}
-            {item === 'plant' && '🪴'}
-            {item === 'rug' && '🧶'}
+             <PixelIcon name={item} type="furniture" size={80} />
           </div>
         ))}
 
@@ -269,16 +319,19 @@ const Shop = ({ playerData, onBuy, onClose }) => {
         {(SHOP_ITEMS[tab] || []).map(item => {
           const owned = playerData.ownedItems?.[tab]?.includes(item.id);
           return (
-            <div key={item.id} className="bg-slate-800 p-4 rounded border border-slate-700 flex flex-col items-center">
-              <div className="text-4xl mb-2">
-                {tab === 'pets' ? '🐾' : tab === 'furniture' ? '🪑' : '👕'}
+            <div key={item.id} className="bg-slate-800 p-4 rounded border border-slate-700 flex flex-col items-center hover:bg-slate-750 transition">
+              {/* NEW ICON SYSTEM */}
+              <div className="mb-3 p-2 bg-slate-900 rounded-lg border border-slate-600">
+                <PixelIcon name={item.id} type={tab} size={60} />
               </div>
-              <div className="text-white font-bold">{item.name}</div>
-              <div className="text-yellow-400">{formatMoney(item.price)}</div>
+              
+              <div className="text-white font-bold text-center leading-tight mb-1">{item.name}</div>
+              <div className="text-yellow-400 text-sm mb-2">{formatMoney(item.price)}</div>
+              
               <button 
                 onClick={() => !owned && onBuy(tab, item)}
                 disabled={owned || playerData.coins < item.price}
-                className={`mt-2 w-full py-1 rounded font-bold ${owned ? 'bg-green-600' : 'bg-blue-600'}`}
+                className={`w-full py-2 rounded font-bold text-sm ${owned ? 'bg-green-600' : 'bg-blue-600 hover:bg-blue-500'} ${playerData.coins < item.price && !owned ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 {owned ? 'OWNED' : 'BUY'}
               </button>
@@ -297,7 +350,7 @@ function App() {
   
   const [playerData, setPlayerData] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem('millionaireV7')) || {
+      return JSON.parse(localStorage.getItem('millionaireV8')) || {
         coins: 50000, 
         ownedItems: { outfits: [], weapons: [], pets: [], furniture: [] },
         equippedItems: { outfits: null, weapons: null },
@@ -310,7 +363,7 @@ function App() {
   const [gameState, setGameState] = useState({ level: 0, category: null, question: null, used: [] });
 
   useEffect(() => {
-    localStorage.setItem('millionaireV7', JSON.stringify(playerData));
+    localStorage.setItem('millionaireV8', JSON.stringify(playerData));
   }, [playerData]);
 
   const startGame = (category) => {
