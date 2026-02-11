@@ -13,31 +13,27 @@ const formatMoney = (n) => {
   return `$${n.toLocaleString()}`;
 };
 
-// ==================== COMPONENT: ROAMING PET ====================
+// ==================== VISUAL COMPONENTS ====================
+
 const RoamingPet = ({ type }) => {
   const [pos, setPos] = useState({ x: 50, y: 80 });
   const [msg, setMsg] = useState('');
-  const [direction, setDirection] = useState(1); // 1 = right, -1 = left
+  const [direction, setDirection] = useState(1);
 
   const emojis = { dog: '🐕', cat: '🐈', dragon: '🐉', phoenix: '🔥', robot: '🤖' };
-  const quotes = [
-    "I'm rich!", "Feed me!", "Nice house!", "Let's play!", 
-    "Winning!", "Woof?", "Shiny!", "More coins!"
-  ];
+  const quotes = ["Winning!", "Feed me!", "So rich!", "Let's play!", "Shiny!", "Woof?"];
 
-  // Movement Logic
   useEffect(() => {
     const moveInterval = setInterval(() => {
       setPos(prev => {
         const newX = Math.max(10, Math.min(90, prev.x + (Math.random() - 0.5) * 40));
         setDirection(newX > prev.x ? 1 : -1);
-        return { x: newX, y: 80 + (Math.random() * 10) }; // Stay near floor
+        return { x: newX, y: 80 + (Math.random() * 10) };
       });
     }, 3000);
 
-    // Talking Logic
     const talkInterval = setInterval(() => {
-      if (Math.random() > 0.6) {
+      if (Math.random() > 0.7) {
         setMsg(quotes[Math.floor(Math.random() * quotes.length)]);
         setTimeout(() => setMsg(''), 2000);
       }
@@ -49,11 +45,10 @@ const RoamingPet = ({ type }) => {
   return (
     <div style={{ 
       position: 'absolute', left: `${pos.x}%`, top: `${pos.y}%`, 
-      transition: 'all 2s ease-in-out', zIndex: 20,
-      transform: `scaleX(${direction})` 
+      transition: 'all 2s ease-in-out', zIndex: 20, transform: `scaleX(${direction})` 
     }}>
       {msg && (
-        <div className="absolute -top-12 -left-10 bg-white text-black p-1 rounded-lg text-xs w-24 text-center border-2 border-black whitespace-nowrap z-30">
+        <div className="absolute -top-12 -left-10 bg-white text-black p-1 rounded-lg text-xs w-24 text-center border-2 border-black z-30">
           {msg}
           <div className="absolute bottom-[-6px] left-1/2 w-2 h-2 bg-white rotate-45 border-r-2 border-b-2 border-black"></div>
         </div>
@@ -63,16 +58,12 @@ const RoamingPet = ({ type }) => {
   );
 };
 
-// ==================== COMPONENT: PIXEL AVATAR ====================
 const PixelAvatar = ({ equipped, size = 100 }) => {
   return (
     <div style={{ width: size, height: size, position: 'relative' }}>
-       {/* Body */}
-       <div className="absolute bottom-0 left-1/4 w-1/2 h-1/3 bg-slate-700" /> {/* Legs */}
-       <div className="absolute bottom-1/3 left-1/5 w-3/5 h-1/3 bg-blue-500 rounded-sm" /> {/* Torso */}
-       <div className="absolute bottom-2/3 left-1/4 w-1/2 h-1/3 bg-orange-200 rounded-full" /> {/* Head */}
-
-       {/* Items */}
+       <div className="absolute bottom-0 left-1/4 w-1/2 h-1/3 bg-slate-700" />
+       <div className="absolute bottom-1/3 left-1/5 w-3/5 h-1/3 bg-blue-500 rounded-sm" />
+       <div className="absolute bottom-2/3 left-1/4 w-1/2 h-1/3 bg-orange-200 rounded-full" />
        {equipped.outfits === 'crown' && <div className="absolute -top-2 left-1/4 text-2xl">👑</div>}
        {equipped.outfits === 'tophat' && <div className="absolute -top-4 left-1/4 text-2xl">🎩</div>}
        {equipped.weapons === 'sword' && <div className="absolute top-1/2 -right-4 text-3xl">⚔️</div>}
@@ -81,44 +72,92 @@ const PixelAvatar = ({ equipped, size = 100 }) => {
   );
 };
 
-// ==================== SCREEN: CASINO ====================
+// ==================== SCREEN: CASINO GAUNTLET ====================
 const Casino = ({ playerData, updateCoins, onClose }) => {
   const [bet, setBet] = useState(0);
-  const [phase, setPhase] = useState('betting'); // betting, playing, result
+  const [phase, setPhase] = useState('betting'); 
+  const [streak, setStreak] = useState(0);
   const [q, setQ] = useState(null);
   const [msg, setMsg] = useState("");
+  
+  // Track questions used IN THIS SESSION to prevent repeats
+  const [sessionUsed, setSessionUsed] = useState([]);
 
-  const placeBet = () => {
+  // --- LOGIC: GET TRULY RANDOM QUESTION FROM ANYWHERE ---
+  const getRandomGlobalQuestion = () => {
+    // 1. Get all categories (trivia, science, history...)
+    const allCats = Object.keys(QUESTIONS);
+    // 2. Pick random category
+    const randCat = allCats[Math.floor(Math.random() * allCats.length)];
+    // 3. Pick random difficulty (to ensure we don't just get hard ones)
+    const diffs = ['easy', 'medium', 'hard'];
+    const randDiff = diffs[Math.floor(Math.random() * diffs.length)];
+    
+    // 4. Get the bank
+    const bank = QUESTIONS[randCat]?.[randDiff] || QUESTIONS.trivia.easy;
+    
+    // 5. Filter out ones we've just seen
+    const available = bank.filter(item => !sessionUsed.includes(item.q));
+    
+    // 6. If we exhausted a specific small bank, just pick any to prevent crash
+    const finalQ = available.length > 0 
+      ? available[Math.floor(Math.random() * available.length)] 
+      : bank[Math.floor(Math.random() * bank.length)];
+
+    return finalQ;
+  };
+
+  const startGauntlet = () => {
     if (bet <= 0 || bet > playerData.coins) {
       setMsg("Invalid bet amount!");
       return;
     }
-    // Get a hard question for the casino!
-    const randomQ = QUESTIONS.trivia.hard[Math.floor(Math.random() * QUESTIONS.trivia.hard.length)];
-    setQ(randomQ);
-    setPhase('playing');
+    updateCoins(-bet); // Deduct money upfront
+    setStreak(0);
     setMsg("");
+    setSessionUsed([]); // Reset used list for new game
+    loadNextQuestion();
+    setPhase('playing');
+  };
+
+  const loadNextQuestion = () => {
+    const newQ = getRandomGlobalQuestion();
+    setSessionUsed(prev => [...prev, newQ.q]);
+    setQ(newQ);
   };
 
   const handleAnswer = (idx) => {
     if (idx === q.a) {
-      updateCoins(bet); // Win: Add bet amount (doubling money)
-      setMsg(`WINNER! You won ${formatMoney(bet)}!`);
+      // CORRECT
+      const newStreak = streak + 1;
+      setStreak(newStreak);
+      
+      if (newStreak === 5) {
+        // WIN CONDITION MET
+        const winnings = bet * 5;
+        updateCoins(winnings); 
+        setMsg(`JACKPOT! 5 IN A ROW! +${formatMoney(winnings)}`);
+        setPhase('result');
+      } else {
+        // KEEP GOING
+        loadNextQuestion();
+      }
     } else {
-      updateCoins(-bet); // Lose: Subtract bet
-      setMsg(`LOST! You lost ${formatMoney(bet)}.`);
+      // WRONG - GAME OVER
+      setMsg(`WRONG! You lost ${formatMoney(bet)}.`);
+      setPhase('result');
     }
-    setPhase('result');
   };
 
   return (
     <div className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4">
       <div className="bg-purple-900 border-4 border-yellow-400 p-8 rounded-2xl w-full max-w-lg text-center shadow-[0_0_50px_rgba(250,204,21,0.5)]">
-        <h2 className="text-4xl font-black text-yellow-400 mb-6">🎰 HIGH STAKES TRIVIA</h2>
+        <h2 className="text-4xl font-black text-yellow-400 mb-2">🎰 THE GAUNTLET</h2>
+        <p className="text-purple-200 mb-6 text-sm">5 QUESTIONS. 5X PAYOUT. 1 LIFE.</p>
         
         {phase === 'betting' && (
           <div className="space-y-4">
-            <p className="text-white">Current Cash: {formatMoney(playerData.coins)}</p>
+            <p className="text-white">Bank: {formatMoney(playerData.coins)}</p>
             <input 
               type="number" 
               className="w-full p-4 text-black text-2xl font-bold rounded text-center"
@@ -127,11 +166,11 @@ const Casino = ({ playerData, updateCoins, onClose }) => {
             />
             {msg && <p className="text-red-400 font-bold">{msg}</p>}
             <div className="flex gap-4 justify-center">
-              <button onClick={placeBet} className="bg-green-500 hover:bg-green-400 text-black px-8 py-4 rounded-xl font-bold text-xl w-full">
-                PLACE BET
+              <button onClick={startGauntlet} className="bg-green-500 hover:bg-green-400 text-black px-8 py-4 rounded-xl font-bold text-xl w-full">
+                START RUN
               </button>
               <button onClick={onClose} className="bg-red-600 text-white px-8 py-4 rounded-xl font-bold w-full">
-                LEAVE
+                EXIT
               </button>
             </div>
           </div>
@@ -139,7 +178,12 @@ const Casino = ({ playerData, updateCoins, onClose }) => {
 
         {phase === 'playing' && q && (
           <div>
-            <div className="bg-white text-black p-4 rounded-xl font-bold text-lg mb-6 border-4 border-blue-500">
+            <div className="flex justify-between items-center mb-4 px-2">
+              <span className="text-yellow-400 font-bold">STREAK: {streak}/5</span>
+              <span className="text-green-400 font-bold">POT: {formatMoney(bet * 5)}</span>
+            </div>
+
+            <div className="bg-white text-black p-4 rounded-xl font-bold text-lg mb-6 border-4 border-blue-500 min-h-[100px] flex items-center justify-center">
               {q.q}
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -153,10 +197,13 @@ const Casino = ({ playerData, updateCoins, onClose }) => {
         )}
 
         {phase === 'result' && (
-          <div className="space-y-6">
-            <h3 className={`text-3xl font-black ${msg.includes('WIN') ? 'text-green-400' : 'text-red-500'}`}>{msg}</h3>
-            <button onClick={() => setPhase('betting')} className="bg-yellow-400 text-black px-8 py-3 rounded-full font-bold text-xl">
-              BET AGAIN
+          <div className="space-y-6 animate-fade-in">
+            <h3 className={`text-3xl font-black ${msg.includes('JACKPOT') ? 'text-green-400' : 'text-red-500'}`}>{msg}</h3>
+            {msg.includes('WRONG') && (
+               <p className="text-white">The correct answer was: <span className="text-yellow-400 font-bold">{q.o[q.a]}</span></p>
+            )}
+            <button onClick={() => setPhase('betting')} className="bg-yellow-400 text-black px-8 py-3 rounded-full font-bold text-xl hover:scale-105 transition">
+              PLAY AGAIN
             </button>
             <button onClick={onClose} className="block w-full text-slate-400 hover:text-white mt-4">Return to Menu</button>
           </div>
@@ -170,19 +217,14 @@ const Casino = ({ playerData, updateCoins, onClose }) => {
 const House = ({ playerData, onClose }) => {
   return (
     <div className="fixed inset-0 z-40 bg-slate-900 flex items-center justify-center">
-      {/* Room Container */}
       <div className="relative w-full max-w-4xl h-[80vh] bg-[#F0E68C] border-8 border-slate-700 rounded-3xl overflow-hidden shadow-2xl">
+        <div className="absolute top-0 w-full h-[70%] bg-[#FFDAB9] border-b-4 border-slate-400"></div>
+        <div className="absolute bottom-0 w-full h-[30%] bg-[#8B4513]"></div>
         
-        {/* Wall & Floor */}
-        <div className="absolute top-0 w-full h-[70%] bg-[#FFDAB9] border-b-4 border-slate-400"></div> {/* Wall */}
-        <div className="absolute bottom-0 w-full h-[30%] bg-[#8B4513]"></div> {/* Floor */}
-
-        {/* UI Close Button */}
         <button onClick={onClose} className="absolute top-4 right-4 bg-red-500 text-white p-2 rounded-full z-50 font-bold border-2 border-white">
           EXIT HOUSE
         </button>
 
-        {/* Furniture Layer (Simple positioning logic) */}
         {playerData.ownedItems?.furniture?.map((item, i) => (
           <div key={i} className="absolute bottom-[25%] text-6xl drop-shadow-lg" style={{ left: `${10 + (i * 15)}%` }}>
             {item === 'lamp' && '🛋️'}
@@ -192,13 +234,11 @@ const House = ({ playerData, onClose }) => {
           </div>
         ))}
 
-        {/* Avatar Layer - Centered */}
-        <div className="absolute bottom-[15%] left-1/2 -translate-x-1/2 z-10 transition-all hover:scale-110">
+        <div className="absolute bottom-[15%] left-1/2 -translate-x-1/2 z-10 hover:scale-110 transition">
           <PixelAvatar equipped={playerData.equippedItems} size={150} />
           <div className="bg-black/50 text-white text-xs px-2 rounded mt-1 text-center">YOU</div>
         </div>
 
-        {/* Pets Layer - Roaming */}
         {playerData.ownedItems?.pets?.map((pet, i) => (
           <RoamingPet key={i} type={pet} />
         ))}
@@ -250,14 +290,14 @@ const Shop = ({ playerData, onBuy, onClose }) => {
   );
 };
 
-// ==================== MAIN APP LOGIC ====================
+// ==================== MAIN APP ====================
 
 function App() {
   const [screen, setScreen] = useState('menu');
   
   const [playerData, setPlayerData] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem('millionaireV6')) || {
+      return JSON.parse(localStorage.getItem('millionaireV7')) || {
         coins: 50000, 
         ownedItems: { outfits: [], weapons: [], pets: [], furniture: [] },
         equippedItems: { outfits: null, weapons: null },
@@ -270,7 +310,7 @@ function App() {
   const [gameState, setGameState] = useState({ level: 0, category: null, question: null, used: [] });
 
   useEffect(() => {
-    localStorage.setItem('millionaireV6', JSON.stringify(playerData));
+    localStorage.setItem('millionaireV7', JSON.stringify(playerData));
   }, [playerData]);
 
   const startGame = (category) => {
@@ -335,7 +375,7 @@ function App() {
           
           <div className="flex gap-4">
             <button onClick={() => setScreen('house')} className="px-6 py-3 bg-green-600 rounded-lg font-bold shadow-lg border-b-4 border-green-800 hover:translate-y-1 transition">
-              🏠 MY HOUSE
+              🏠 HOUSE
             </button>
             <button onClick={() => setScreen('shop')} className="px-6 py-3 bg-blue-600 rounded-lg font-bold shadow-lg border-b-4 border-blue-800 hover:translate-y-1 transition">
               🛒 SHOP
